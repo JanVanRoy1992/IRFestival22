@@ -38,7 +38,7 @@ namespace IRFestival.Api.Controllers
         //    return Ok(result);
         //}
 
-        [HttpPost("Upload")]
+        [HttpPost("upload")]
         [Authorize]
         [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(AppSettingsOptions))]
         [ProducesResponseType((int)HttpStatusCode.Unauthorized)]

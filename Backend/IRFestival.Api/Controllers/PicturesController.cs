@@ -5,6 +5,7 @@ using IRFestival.Api.Model;
 using IRFestival.Api.Options;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Identity.Web.Resource;
 using System.Net;
 using System.Web;
 
@@ -16,6 +17,8 @@ namespace IRFestival.Api.Controllers
     {
         private readonly IConfiguration Configuration;
         private BlobUtility BlobUtility { get; }
+
+        static readonly string[] ScopesRequiredByApiToUploadPictures = new string[] { "Pictures.Upload.All" };
 
         public PicturesController(BlobUtility blobUtility, IConfiguration configuration)
         {
@@ -41,6 +44,7 @@ namespace IRFestival.Api.Controllers
         [ProducesResponseType((int)HttpStatusCode.Unauthorized)]
         public async Task<ActionResult> PostPictures(IFormFile file)
         {
+            HttpContext.VerifyUserHasAnyAcceptedScope(ScopesRequiredByApiToUploadPictures);
             BlobContainerClient Container = BlobUtility.GetPicturesContainer();
             var filename = $"{DateTimeOffset.UtcNow.ToUnixTimeSeconds()}{HttpUtility.UrlPathEncode(file.FileName)}";
             await Container.UploadBlobAsync(filename, file.OpenReadStream());

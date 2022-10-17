@@ -3,6 +3,7 @@ using Azure.Storage;
 using Azure.Storage.Blobs;
 using IRFestival.Api.Common;
 using IRFestival.Api.Options;
+using Microsoft.Identity.Web;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -25,6 +26,9 @@ builder.Services.AddSingleton(p => new BlobServiceClient(new Uri(blobUri), stora
 builder.Services.AddSingleton(p => storageSharedkeyCredential);
 builder.Services.AddSingleton<BlobUtility>();
 builder.Services.Configure<BlobSettingsOptions>(builder.Configuration.GetSection("Storage"));
+
+// Add authentication
+builder.Services.AddMicrosoftIdentityWebApiAuthentication(builder.Configuration, "AzureAd");
 
 // Keyvault
 if (!builder.Environment.IsDevelopment())
@@ -52,6 +56,7 @@ app.UseRouting();
 // THIS IS NOT A SECURE CORS POLICY, DO NOT USE IN PRODUCTION
 app.UseCors(policy => policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

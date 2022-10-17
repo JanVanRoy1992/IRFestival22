@@ -3,6 +3,7 @@ using Azure.Storage.Blobs;
 using IRFestival.Api.Common;
 using IRFestival.Api.Model;
 using IRFestival.Api.Options;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
 using System.Web;
@@ -34,8 +35,10 @@ namespace IRFestival.Api.Controllers
         //    return Ok(result);
         //}
 
-        [HttpPost]
+        [HttpPost("Upload")]
+        [Authorize]
         [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(AppSettingsOptions))]
+        [ProducesResponseType((int)HttpStatusCode.Unauthorized)]
         public async Task<ActionResult> PostPictures(IFormFile file)
         {
             BlobContainerClient Container = BlobUtility.GetPicturesContainer();

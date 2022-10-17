@@ -1,3 +1,4 @@
+using Azure.Identity;
 using Azure.Storage;
 using Azure.Storage.Blobs;
 using IRFestival.Api.Common;
@@ -24,6 +25,14 @@ builder.Services.AddSingleton(p => new BlobServiceClient(new Uri(blobUri), stora
 builder.Services.AddSingleton(p => storageSharedkeyCredential);
 builder.Services.AddSingleton<BlobUtility>();
 builder.Services.Configure<BlobSettingsOptions>(builder.Configuration.GetSection("Storage"));
+
+// Keyvault
+if (!builder.Environment.IsDevelopment())
+{
+    builder.Configuration.AddAzureKeyVault(
+    new Uri($"https://irfestivalkeyvaultjvr.vault.azure.net/"),
+    new DefaultAzureCredential(new DefaultAzureCredentialOptions()));
+}
 
 var app = builder.Build();
 

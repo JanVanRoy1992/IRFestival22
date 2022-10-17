@@ -1,5 +1,7 @@
-﻿using Azure.Storage.Blobs;
+﻿using Azure.Messaging.ServiceBus;
+using Azure.Storage.Blobs;
 using IRFestival.Api.Common;
+using IRFestival.Api.Model;
 using IRFestival.Api.Options;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
@@ -11,11 +13,13 @@ namespace IRFestival.Api.Controllers
     [ApiController]
     public class PicturesController : ControllerBase
     {
+        private readonly IConfiguration Configuration;
         private BlobUtility BlobUtility { get; }
 
-        public PicturesController(BlobUtility blobUtility)
+        public PicturesController(BlobUtility blobUtility, IConfiguration configuration)
         {
             BlobUtility = blobUtility;
+            Configuration = configuration;
         }
 
         //[HttpGet]
@@ -37,6 +41,24 @@ namespace IRFestival.Api.Controllers
             BlobContainerClient Container = BlobUtility.GetPicturesContainer();
             var filename = $"{DateTimeOffset.UtcNow.ToUnixTimeSeconds()}{HttpUtility.UrlPathEncode(file.FileName)}";
             await Container.UploadBlobAsync(filename, file.OpenReadStream());
+
+            await using (var client = new ServiceBusClient(Configuration.GetConnectionString("ServiceBusSenderConnection")))
+            {
+                // create a sender for the queue
+                ServiceBusSender sender = client.CreateSender(Configuration.GetValue<string>("QueueNameMails"));
+
+                // create a message that we can send
+                ServiceBusMessage message = new ServiceBusMessage($"The picture {filename} was uploaded! Send a fictional mail to me@you.us");
+
+                //ResponseModel response = new ResponseModel()
+                //{
+                //    MailAddress = "me@you.us",
+                //    Message = $"The picture {filename} was uploaded!"
+                //};
+
+                // send the message
+                await sender.SendMessageAsync(message);
+            }
 
             return Ok();
         }
